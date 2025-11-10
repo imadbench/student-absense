@@ -1,0 +1,65 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #101828; background: #f8fafc; }
+
+/* Navbar */
+.navbar { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #0f172a; color: #fff; z-index: 10; }
+.navbar .brand { font-weight: 700; }
+.navbar .nav-links { list-style: none; display: flex; gap: 14px; margin: 0; padding: 0; }
+.navbar .nav-links a { color: #e2e8f0; text-decoration: none; padding: 8px 10px; border-radius: 6px; }
+.navbar .nav-links a:hover { background: #1e293b; color: #fff; }
+
+.section { padding: 24px 20px; max-width: 1200px; margin: 0 auto; }
+.section-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Table */
+.table-wrapper { overflow: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+#attendance-table { width: 100%; border-collapse: collapse; min-width: 960px; }
+#attendance-table thead tr th { position: sticky; top: 48px; background: #f1f5f9; color: #0f172a; white-space: nowrap; font-weight: 600; border-bottom: 1px solid #e2e8f0; padding: 10px; }
+#attendance-table thead tr.subhead th { top: 90px; font-weight: 500; }
+#attendance-table tbody td { border-top: 1px solid #e2e8f0; padding: 8px; text-align: center; }
+#attendance-table tbody td:first-child, #attendance-table tbody td:nth-child(2), #attendance-table tbody td:nth-child(3), #attendance-table tbody td:nth-child(4) { text-align: left; }
+
+/* Row status colors */
+tr.status-green { background: #ecfdf5; }
+tr.status-yellow { background: #fffbeb; }
+tr.status-red { background: #fef2f2; }
+
+/* Hover highlight via jQuery */
+tr.row-hover { outline: 2px solid #3b82f6; }
+
+/* Buttons */
+.btn { background: #2563eb; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+.btn:hover { background: #1d4ed8; }
+.btn-secondary { background: #475569; }
+.btn-secondary:hover { background: #334155; }
+.btn-success { background: #059669; }
+.btn-success:hover { background: #047857; }
+
+/* Form */
+.form-row { display: grid; grid-template-columns: 160px 1fr; gap: 10px; margin-bottom: 12px; align-items: center; }
+.form-row input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; }
+.error { grid-column: 2; color: #dc2626; font-size: 12px; min-height: 16px; }
+.success { margin-left: 12px; color: #059669; font-weight: 600; }
+.form-actions { display: flex; align-items: center; gap: 8px; }
+
+/* Cards & Reports */
+.report-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+.card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.card-title { color: #334155; font-size: 14px; }
+.card-value { font-size: 28px; font-weight: 800; margin-top: 2px; }
+.chart-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+
+/* Excellent rows */
+tr.excellent { transition: background-color 600ms ease; background-color: #d1fae5 !important; }
+
+@media (max-width: 800px) {
+  .form-row { grid-template-columns: 1fr; }
+  .error { grid-column: 1; }
+}
+
+/* Make sure the reports section is positioned nicely when scrolled-to (account for sticky header) */
+#reports { scroll-margin-top: 80px; }
+
+/* Visible focus for keyboard users */
+#btn-show-report:focus, button:focus { outline: 3px solid rgba(59,130,246,0.45); outline-offset: 2px; }
