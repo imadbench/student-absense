@@ -7,7 +7,7 @@ This is a lightweight front-end attendance app used for recording student sessio
 - `index.html` — Main application UI (attendance table, search, controls).
 - `styles.css` — Styling and responsive layout tweaks.
 - `app.js` — Front-end logic to render students, manage attendance, sorting and reports.
-- `images/` — Folder that stores student photos and other assets. Two placeholder images are included (`student1.svg`, `student2.svg`).
+- `images/` — Folder that stores student photos and other assets. Two placeholder images are included (`image5.svg`, `image1.svg`).
 
 ## Quick start (Windows PowerShell)
 
