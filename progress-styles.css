@@ -1,0 +1,70 @@
+/* Progress Bar Styles */
+.table-progress-container {
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(99,102,241,0.05) 100%);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1f2937;
+}
+
+.progress-value {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+.table-progress {
+  width: 100%;
+  height: 8px;
+  border: none;
+  border-radius: 10px;
+  background: #e5e7eb;
+  overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.table-progress::-webkit-progress-bar {
+  background: #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.table-progress::-webkit-progress-value {
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.table-progress::-moz-progress-bar {
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+body.dark-mode .table-progress-container {
+  background: rgba(59,130,246,0.1);
+  border-bottom-color: #334155;
+}
+
+body.dark-mode .table-progress-label {
+  color: #e5e7eb;
+}
+
+body.dark-mode .table-progress {
+  background: rgba(107,114,128,0.3);
+}
+
+body.dark-mode .table-progress::-webkit-progress-bar {
+  background: rgba(107,114,128,0.3);
+}

@@ -20,6 +20,45 @@ const initialStudents = [
 const QS = (sel, root = document) => root.querySelector(sel);
 const QSA = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+// Track current sort mode
+let currentSortMode = null;
+
+// Dark Mode Manager
+const DarkModeManager = {
+  init() {
+    // Check localStorage for saved preference
+    const savedMode = localStorage.getItem('darkMode');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedMode === 'true' || (savedMode === null && prefersDark)) {
+      this.enable();
+    }
+    
+    // Attach listener
+    QS('#btn-dark-mode').addEventListener('click', () => this.toggle());
+  },
+  
+  enable() {
+    document.body.classList.add('dark-mode');
+    localStorage.setItem('darkMode', 'true');
+    QS('#btn-dark-mode').textContent = '☀️';
+  },
+  
+  disable() {
+    document.body.classList.remove('dark-mode');
+    localStorage.setItem('darkMode', 'false');
+    QS('#btn-dark-mode').textContent = '🌙';
+  },
+  
+  toggle() {
+    if (document.body.classList.contains('dark-mode')) {
+      this.disable();
+    } else {
+      this.enable();
+    }
+  }
+};
+
 function renderTableRows(students) {
   const tbody = QS('#attendance-table tbody');
   tbody.innerHTML = '';
@@ -155,7 +194,7 @@ function buildReport() {
     datasets: [{
       label: 'Students',
       data: [total, present, participated],
-      backgroundColor: ['#93c5fd','#86efac','#fca5a5']
+      backgroundColor: ['#0e79f4ff','rgba(13, 247, 98, 1)','#fb0d0dff']
     }]
   };
 
@@ -168,13 +207,49 @@ function attachJQueryInteractions() {
   $('#attendance-table tbody').on('mouseenter', 'tr', function(){ $(this).addClass('row-hover'); });
   $('#attendance-table tbody').on('mouseleave', 'tr', function(){ $(this).removeClass('row-hover'); });
 
-  // Click row -> alert full name and absences
-  $('#attendance-table tbody').on('click', 'tr', function(){
-    const ln = this.dataset.lastName;
-    const fn = this.dataset.firstName;
-    // Show a French message that includes the student's name
-    alert(`Cette page est dédiée à ${fn} ${ln}`);
-  });
+  // Click row (but not on checkboxes) -> show student information in alert
+    $('#attendance-table tbody').on('click', 'tr', function(e){
+      // Don't open alert if clicking on checkbox
+      if ($(e.target).is('input[type="checkbox"]')) {
+        return;
+      }
+    
+      const id = this.dataset.id;
+      const firstName = this.dataset.firstName;
+      const lastName = this.dataset.lastName;
+      const course = $(this).find('td:eq(3)').text();
+      const absences = $(this).find('.absences').text();
+      const participation = $(this).find('.parts').text();
+      const message = $(this).find('.message').text();
+    
+      // Get session checkboxes
+      const cells = QSA('td', this);
+      const sessionCbs = cells.slice(4, 10).map(td => td.querySelector('input'));
+      const partCbs = cells.slice(10, 16).map(td => td.querySelector('input'));
+    
+      const sessionsAttended = sessionCbs.filter(cb => cb && cb.checked).map((_, idx) => `S${idx + 1}`).join(', ') || 'None';
+      const participations = partCbs.filter(cb => cb && cb.checked).map((_, idx) => `P${idx + 1}`).join(', ') || 'None';
+    
+      // Modern notification approach - show in a formatted message
+      const alertMessage = `
+📋 STUDENT INFORMATION
+═══════════════════════════════════
+👤 Name: ${firstName} ${lastName}
+🆔 ID: ${id}
+📚 Course: ${course}
+
+📊 ATTENDANCE DETAILS
+───────────────────────────────────
+❌ Absences: ${absences}
+💬 Participation Count: ${participation}
+✓ Sessions Attended: ${sessionsAttended}
+💭 Participated in: ${participations}
+
+📌 STATUS: ${message}
+═══════════════════════════════════`;
+    
+      alert(alertMessage);
+    });
 
   // Highlight excellent students (<3 absences)
   $('#btn-highlight-excellent').on('click', function(){
@@ -190,9 +265,91 @@ function attachJQueryInteractions() {
   $('#btn-reset-colors').on('click', function(){
     $('#attendance-table tbody tr').removeClass('excellent');
   });
+
+  // Search by Name functionality
+  $('#searchInput').on('keyup', function(){
+    const searchTerm = $(this).val().toLowerCase();
+    
+    if (searchTerm === '') {
+      // Show all rows
+      $('#attendance-table tbody tr').css('display', '');
+    } else {
+      // Filter rows based on first name or last name
+      $('#attendance-table tbody tr').each(function(){
+        const firstName = this.dataset.firstName ? this.dataset.firstName.toLowerCase() : '';
+        const lastName = this.dataset.lastName ? this.dataset.lastName.toLowerCase() : '';
+        const matches = firstName.includes(searchTerm) || lastName.includes(searchTerm);
+        $(this).css('display', matches ? '' : 'none');
+      });
+    }
+  });
+
+  // Sort by Absences (Ascending)
+  $('#btn-sort-absences').on('click', function(){
+    const rows = $('#attendance-table tbody tr').get();
+    rows.sort(function(a, b){
+      const absA = parseInt($('.absences', a).text() || '0', 10);
+      const absB = parseInt($('.absences', b).text() || '0', 10);
+      return absA - absB; // ascending
+    });
+    
+    // Clear the table body and append sorted rows correctly
+    const tbody = $('#attendance-table tbody');
+    tbody.empty();
+    $.each(rows, function(index, row){
+      // Clone the row to reset any lingering styles
+      const clonedRow = $(row).clone()[0];
+      tbody.append(clonedRow);
+      // Reapply status styling to ensure consistency
+      applyRowStatus(clonedRow);
+    });
+    
+    currentSortMode = 'absences-asc';
+    updateSortStatusMessage();
+  });
+
+  // Sort by Participation (Descending)
+  $('#btn-sort-participation').on('click', function(){
+    const rows = $('#attendance-table tbody tr').get();
+    rows.sort(function(a, b){
+      const partsA = parseInt($('.parts', a).text() || '0', 10);
+      const partsB = parseInt($('.parts', b).text() || '0', 10);
+      return partsB - partsA; // descending
+    });
+    
+    // Clear the table body and append sorted rows correctly
+    const tbody = $('#attendance-table tbody');
+    tbody.empty();
+    $.each(rows, function(index, row){
+      // Clone the row to reset any lingering styles
+      const clonedRow = $(row).clone()[0];
+      tbody.append(clonedRow);
+      // Reapply status styling to ensure consistency
+      applyRowStatus(clonedRow);
+    });
+    
+    currentSortMode = 'participation-desc';
+    updateSortStatusMessage();
+  });
+
+}
+
+function updateSortStatusMessage() {
+  const messageEl = $('#sortStatusMessage');
+
+  if (currentSortMode === null) {
+    messageEl.removeClass('visible').text('');
+  } else if (currentSortMode === 'absences-asc') {
+    messageEl.addClass('visible').text('Currently sorted by absences (ascending)');
+  } else if (currentSortMode === 'participation-desc') {
+    messageEl.addClass('visible').text('Currently sorted by participation (descending)');
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  // Initialize dark mode
+  DarkModeManager.init();
+  
   // Render initial table
   renderTableRows(initialStudents);
 
