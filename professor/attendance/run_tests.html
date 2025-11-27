@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Attendance Functionality</title>
+</head>
+<body>
+    <h1>Test Attendance and Participation Functionality</h1>
+    <p>Open the browser console to see test results.</p>
+    
+    <button onclick="runTests()">Run Tests</button>
+    <div id="results"></div>
+
+    <script src="test_functionality.js"></script>
+    
+    <script>
+        function runTests() {
+            // Clear previous results
+            document.getElementById('results').innerHTML = '';
+            
+            // Run the tests
+            testSave().then(() => {
+                setTimeout(testLoad, 1000); // Wait a bit before loading
+            });
+        }
+    </script>
+</body>
+</html>

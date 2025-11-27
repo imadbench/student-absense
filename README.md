@@ -1,55 +1,251 @@
-# Student Absence (Attendance) — AWP
+# Student Attendance Management System
+## Algiers University
 
-This is a lightweight front-end attendance app used for recording student session attendance and participation.
+A comprehensive web-based attendance management system for tracking student attendance, participation, and justifications.
 
-## What this repository contains
+## Features
 
-- `index.html` — Main application UI (attendance table, search, controls).
-- `styles.css` — Styling and responsive layout tweaks.
-- `app.js` — Front-end logic to render students, manage attendance, sorting and reports.
-- `images/` — Folder that stores student photos and other assets. Two placeholder images are included (`image5.svg`, `image1.svg`).
+### For Professors
+- View all assigned courses
+- Create and manage attendance sessions
+- Mark student attendance (Present, Absent, Late, Excused)
+- Track student participation
+- View attendance summaries and statistics
+- Export attendance data to Excel
 
-## Quick start (Windows PowerShell)
+### For Students
+- View enrolled courses
+- Check attendance records per course
+- View attendance statistics
+- Submit absence justifications with supporting documents
+- Track justification request status
 
-1. Open PowerShell in the project folder (where `index.html` is located):
+### For Administrators
+- Manage students (add, remove, import/export)
+- View system-wide statistics and charts
+- Review and approve/reject justification requests
+- Manage courses and enrollments
+- Generate comprehensive reports
 
-```powershell
-cd "C:\Users\name\student apsence"
+## Technology Stack
+
+- **Frontend**: HTML5, CSS3, jQuery, Chart.js
+- **Backend**: PHP 7.4+
+- **Database**: MariaDB/MySQL
+- **Design**: Mobile-first responsive design
+
+## Installation
+
+### Prerequisites
+- WAMP/XAMPP/LAMP server
+- PHP 7.4 or higher
+- MariaDB/MySQL 5.7 or higher
+- Web browser (Chrome, Firefox, Safari, Edge)
+
+### Setup Steps
+
+1. **Clone or extract the project**
+   ```
+   Place the project in your web server directory:
+   C:\wamp64\www\student apsence
+   ```
+
+2. **Create the database**
+   - Open phpMyAdmin or MySQL command line
+   - Create a new database named `student_absence`
+   - Import the schema file: `database/schema.sql`
+
+3. **Configure database connection**
+   - Edit `backend/config/config.php`
+   - Update database credentials if needed:
+     ```php
+     define('DB_HOST', 'localhost');
+     define('DB_USER', 'root');
+     define('DB_PASS', '');
+     define('DB_NAME', 'student_absence');
+     ```
+
+4. **Set up directories**
+   - Ensure `uploads/` directory exists and is writable
+   - Ensure `backend/logs/` directory exists and is writable
+
+5. **Access the application**
+   - Open browser: `http://localhost/student%20apsence`
+   - Default admin credentials:
+     - Username: `admin`
+     - Password: `admin123`
+     - **Change this password immediately after first login!**
+
+## Project Structure
+
+```
+student apsence/
+├── backend/
+│   ├── api/              # API endpoints
+│   │   ├── auth.php
+│   │   ├── attendance.php
+│   │   ├── courses.php
+│   │   ├── justification.php
+│   │   ├── participation.php
+│   │   ├── statistics.php
+│   │   └── students.php
+│   ├── config/            # Configuration files
+│   │   └── config.php
+│   ├── includes/          # Shared PHP files
+│   │   ├── auth.php
+│   │   ├── db_connect.php
+│   │   └── functions.php
+│   └── logs/              # Error logs
+├── database/
+│   ├── schema.sql         # Database schema
+│   └── ER_DIAGRAM.md      # ER diagram documentation
+├── frontend/
+│   └── shared/            # Shared components
+│       ├── header.php
+│       └── footer.php
+├── professor/             # Professor pages
+│   ├── home.php
+│   ├── session.php
+│   └── summary.php
+├── student/               # Student pages
+│   ├── home.php
+│   └── attendance.php
+├── admin/                 # Administrator pages
+│   ├── home.php
+│   ├── statistics.php
+│   └── students.php
+├── assets/
+│   ├── css/
+│   │   └── main.css       # Main stylesheet
+│   └── js/                # JavaScript files
+│       ├── login.js
+│       ├── professor/
+│       ├── student/
+│       └── admin/
+├── uploads/               # Uploaded files (justifications)
+├── login.php
+├── logout.php
+├── index.php
+└── README.md
 ```
 
-2. Start a simple static server. If you have Python installed (recommended):
+## Database Schema
 
-```powershell
-python -m http.server 8000
-```
+The system uses the following main tables:
+- `users` - Students, professors, administrators
+- `groups` - Student groups
+- `courses` - Course information
+- `enrollments` - Student course enrollments
+- `attendance_sessions` - Attendance session records
+- `attendance_records` - Individual attendance records
+- `participation_records` - Student participation tracking
+- `justification_requests` - Absence justification requests
 
-Or with Node (no install required if you use `npx`):
+See `database/ER_DIAGRAM.md` for detailed entity relationship documentation.
 
-```powershell
-npx http-server -p 8000
-```
+## Usage Guide
 
-3. Open the app in your browser:
+### For Administrators
 
-```
-http://localhost:8000
-```
+1. **Add Students**
+   - Go to Student Management
+   - Click "Add Student" or "Import Excel"
+   - Fill in student details
+   - Default password is the student ID (students should change it)
 
-## Adding real student photos
+2. **Import Students from Excel**
+   - Prepare CSV file with columns: Student ID, First Name, Last Name, Email
+   - Click "Import Excel" and select the file
+   - System will import students automatically
 
-- Add image files (JPG/PNG/SVG) into the `images/` folder.
-- To display a photo inside a row, update `index.html` or `app.js` where rows are rendered. Example markup for a photo cell:
+3. **View Statistics**
+   - Go to Statistics page
+   - View charts and reports
+   - Analyze attendance trends
 
-```html
-<td class="photo-cell"><img src="images/your-photo.jpg" alt="Student photo" width="48" height="48"></td>
-```
+### For Professors
 
-- If you want me to wire photos into the table rows (show an avatar column), tell me and I will update `index.html`/`app.js` to add a photo column and populate it with available images.
+1. **Create Attendance Session**
+   - Select a course from home page
+   - Create a new session
+   - Mark attendance for enrolled students
 
-## Notes & next steps I can help with
+2. **Mark Attendance**
+   - Open a session
+   - Select status for each student (Present/Absent/Late/Excused)
+   - Close session when done
 
-- Adjust column width percentages in the `<colgroup>` if you want different sizing.
-- Re-enable the progress bar UI and wiring (`progress.js`) if you want an on-screen progress indicator.
-- Wire click-to-advance attendance behavior (clicking a student row advances checks) if desired.
+3. **View Summary**
+   - Access attendance summary for any course
+   - Export data to Excel if needed
 
-If you want me to embed the new sample photos into the table UI now, say so and I will patch `index.html`/`app.js` accordingly.
+### For Students
+
+1. **View Attendance**
+   - Select a course from home page
+   - View all attendance records
+   - Check attendance statistics
+
+2. **Submit Justification**
+   - Find an absent session
+   - Click "Submit Justification"
+   - Provide reason and optional supporting document
+   - Track request status
+
+## Security Features
+
+- Password hashing using PHP `password_hash()`
+- SQL injection prevention with prepared statements
+- Session-based authentication
+- Role-based access control
+- File upload validation
+- Error logging
+
+## API Endpoints
+
+All API endpoints are in `backend/api/`:
+- `auth.php` - Authentication (login, logout, check)
+- `attendance.php` - Attendance management
+- `courses.php` - Course operations
+- `justification.php` - Justification requests
+- `participation.php` - Participation tracking
+- `statistics.php` - Statistics and reports
+- `students.php` - Student management
+
+## Troubleshooting
+
+### Database Connection Error
+- Check database credentials in `backend/config/config.php`
+- Ensure MySQL/MariaDB service is running
+- Verify database `student_absence` exists
+
+### File Upload Issues
+- Check `uploads/` directory permissions (should be writable)
+- Verify `MAX_FILE_SIZE` in config.php
+- Check PHP `upload_max_filesize` setting
+
+### Session Issues
+- Ensure PHP sessions are enabled
+- Check session directory permissions
+- Clear browser cookies if needed
+
+## Development Notes
+
+- All paths use relative paths from project root
+- jQuery is loaded from CDN
+- Chart.js is used for statistics visualization
+- Mobile-first responsive design
+- All user input is sanitized
+- Error logging is enabled
+
+## License
+
+This project is developed for Algiers University.
+
+## Support
+
+For issues or questions, contact the system administrator.
+
+---
+
+**Note**: Remember to change default admin password and configure proper security settings for production use.

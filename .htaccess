@@ -1,0 +1,13 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Handle requests for the student apsence directory
+RewriteBase /student%20apsence/
+
+# Rewrite rules for the application
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Handle API requests
+RewriteRule ^api/(.*)$ backend/api/$1 [QSA,L]

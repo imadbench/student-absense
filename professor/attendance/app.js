@@ -1,4 +1,4 @@
-// Data model for initial rows
+// Data model for initial rows - will be replaced with real data
 const initialStudents = [
   {
     id: '20250001', lastName: 'Ahmed', firstName: 'Sara', course: 'AWP',
@@ -16,6 +16,162 @@ const initialStudents = [
     parts:    [false, false, false, false, false, false]
   }
 ];
+
+// Get course ID from URL parameters
+function getCourseId() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('course_id') || 1; // Default to 1 if not provided
+}
+
+// Fetch real student data from API
+async function loadRealStudentData() {
+  try {
+    const courseId = getCourseId();
+    console.log('Loading student data for course ID:', courseId);
+    
+    // First, get student data
+    const formData = new FormData();
+    formData.append('action', 'get_students');
+    formData.append('course_id', courseId);
+    
+    const response = await fetch('api.php', {
+      method: 'POST',
+      body: formData
+    });
+    console.log('Response status:', response.status);
+    
+    const data = await response.json();
+    console.log('Response data:', data);
+    
+    if (data.success) {
+      console.log('Loaded real student data:', data.students);
+      // Set the course name in the HTML
+      if (data.students.length > 0 && data.students[0].course) {
+        const courseNameElement = document.getElementById('course-name');
+        if (courseNameElement) {
+          courseNameElement.textContent = data.students[0].course;
+        }
+      }
+      return data.students;
+    } else {
+      console.error('Failed to load student data:', data.message);
+      return initialStudents; // Fallback to initial data
+    }
+  } catch (error) {
+    console.error('Error loading student data:', error);
+    return initialStudents; // Fallback to initial data
+  }
+}
+
+// New function to load attendance and participation data from all sessions
+async function loadAllSessionsData(courseId) {
+  try {
+    // Use GET request with query parameters
+    const url = `../backend/api/attendance.php?action=get_all_sessions_attendance&course_id=${courseId}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return data;
+    } else {
+      console.error('Failed to load sessions data:', data.message);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error loading sessions data:', error);
+    return null;
+  }
+}
+
+// Modified function to render table rows with saved data
+async function renderTableRowsWithSavedData() {
+  const courseId = getCourseId();
+  
+  // Load student data
+  const students = await loadRealStudentData();
+  
+  // Load attendance and participation data
+  const sessionsData = await loadAllSessionsData(courseId);
+  
+  if (sessionsData && sessionsData.students && sessionsData.sessions) {
+    // Create lookup for student data by student_id
+    const studentLookup = {};
+    sessionsData.students.forEach(student => {
+      studentLookup[student.student_id] = student;
+    });
+    
+    // Update student objects with actual attendance/participation data
+    const updatedStudents = students.map(student => {
+      const studentData = studentLookup[student.id];
+      if (studentData) {
+        // Initialize arrays
+        const sessionsArray = new Array(6).fill(false);
+        const partsArray = new Array(6).fill(false);
+        
+        // Fill with actual data
+        studentData.sessions.forEach(session => {
+          const sessionIndex = session.session_number - 1; // Convert to 0-based index
+          if (sessionIndex >= 0 && sessionIndex < 6) {
+            // Set attendance (true if present or late)
+            sessionsArray[sessionIndex] = (session.status === 'present' || session.status === 'late');
+            
+            // Set participation (true if any participation records)
+            partsArray[sessionIndex] = session.participations && session.participations.length > 0;
+          }
+        });
+        
+        return {
+          ...student,
+          sessions: sessionsArray,
+          parts: partsArray
+        };
+      }
+      return student;
+    });
+    
+    renderTableRows(updatedStudents);
+  } else {
+    // Fallback to original rendering if no saved data
+    renderTableRows(students);
+  }
+}
+
+// Add student to database
+async function addStudentToDatabase(studentData) {
+  try {
+    const courseId = getCourseId();
+    const formData = new FormData();
+    formData.append('action', 'add_student');
+    formData.append('course_id', courseId);
+    formData.append('student_id', studentData.id);
+    formData.append('first_name', studentData.firstName);
+    formData.append('last_name', studentData.lastName);
+    formData.append('email', studentData.email);
+    
+    const response = await fetch('api.php', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return { success: true, message: data.message };
+    } else {
+      return { success: false, message: data.message };
+    }
+  } catch (error) {
+    console.error('Error adding student:', error);
+    return { success: false, message: 'Error adding student: ' + error.message };
+  }
+}
 
 const QS = (sel, root = document) => root.querySelector(sel);
 const QSA = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -81,28 +237,56 @@ function buildRow(stu) {
   tr.appendChild(mkTd(stu.course || 'AWP'));
 
   // Sessions S1..S6
-  stu.sessions.forEach((val, idx) => {
-    const td = document.createElement('td');
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = !!val;
-    cb.ariaLabel = `Session ${idx + 1}`;
-    cb.addEventListener('change', () => applyRowStatus(tr));
-    td.appendChild(cb);
-    tr.appendChild(td);
-  });
+  if (stu.sessions && Array.isArray(stu.sessions)) {
+    stu.sessions.forEach((val, idx) => {
+      const td = document.createElement('td');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!val;
+      cb.ariaLabel = `Session ${idx + 1}`;
+      cb.addEventListener('change', () => applyRowStatus(tr));
+      td.appendChild(cb);
+      tr.appendChild(td);
+    });
+  } else {
+    // Fallback if sessions data is missing
+    for (let i = 0; i < 6; i++) {
+      const td = document.createElement('td');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = false;
+      cb.ariaLabel = `Session ${i + 1}`;
+      cb.addEventListener('change', () => applyRowStatus(tr));
+      td.appendChild(cb);
+      tr.appendChild(td);
+    }
+  }
 
   // Participation P1..P6
-  stu.parts.forEach((val, idx) => {
-    const td = document.createElement('td');
-    const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.checked = !!val;
-    cb.ariaLabel = `Participation ${idx + 1}`;
-    cb.addEventListener('change', () => applyRowStatus(tr));
-    td.appendChild(cb);
-    tr.appendChild(td);
-  });
+  if (stu.parts && Array.isArray(stu.parts)) {
+    stu.parts.forEach((val, idx) => {
+      const td = document.createElement('td');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!val;
+      cb.ariaLabel = `Participation ${idx + 1}`;
+      cb.addEventListener('change', () => applyRowStatus(tr));
+      td.appendChild(cb);
+      tr.appendChild(td);
+    });
+  } else {
+    // Fallback if parts data is missing
+    for (let i = 0; i < 6; i++) {
+      const td = document.createElement('td');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = false;
+      cb.ariaLabel = `Participation ${i + 1}`;
+      cb.addEventListener('change', () => applyRowStatus(tr));
+      td.appendChild(cb);
+      tr.appendChild(td);
+    }
+  }
 
   // Absences, Participations, Message
   tr.appendChild(mkTd('<span class="absences">0</span>'));
@@ -346,24 +530,56 @@ function updateSortStatusMessage() {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   // Initialize dark mode
   DarkModeManager.init();
   
-  // Render initial table
-  renderTableRows(initialStudents);
+  // Load real student data with saved attendance and participation
+  console.log('Starting to load student data with saved attendance...');
+  await renderTableRowsWithSavedData();
+
+  // Add Save Button Event Listener
+  const saveButton = document.createElement('button');
+  saveButton.textContent = '💾 Save Attendance & Participation';
+  saveButton.className = 'btn btn-primary';
+  saveButton.style.margin = '10px';
+  saveButton.addEventListener('click', saveAttendanceData);
+  
+  // Insert save button after the section header in the attendance section
+  const attendanceSection = document.getElementById('attendance');
+  const sectionHeader = attendanceSection.querySelector('.section-header');
+  sectionHeader.parentNode.insertBefore(saveButton, sectionHeader.nextSibling);
 
   // Form submit
-  QS('#add-student-form').addEventListener('submit', (e) => {
+  QS('#add-student-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     QS('#add-success').textContent = '';
+    QS('#err-studentId').textContent = '';
+    QS('#err-lastName').textContent = '';
+    QS('#err-firstName').textContent = '';
+    QS('#err-email').textContent = '';
+    
     const { ok, data } = validateForm();
     if (!ok) return; // prevent submission on validation errors
 
-    addStudentToTable({ id: data.id, lastName: data.lastName, firstName: data.firstName });
-
-    QS('#add-success').textContent = 'Student added successfully to the table!';
-    e.target.reset();
+    // Add student to database
+    const result = await addStudentToDatabase({
+      id: data.id,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email
+    });
+    
+    if (result.success) {
+      // Instead of just adding the new student, reload all students to ensure consistency
+      await renderTableRowsWithSavedData();
+      
+      QS('#add-success').textContent = result.message;
+      e.target.reset();
+    } else {
+      // Show error message
+      QS('#err-studentId').textContent = result.message;
+    }
   });
 
   // Show report
@@ -390,3 +606,96 @@ window.addEventListener('DOMContentLoaded', () => {
   // jQuery interactions
   attachJQueryInteractions();
 });
+
+// Function to save attendance and participation data
+async function saveAttendanceData() {
+  try {
+    // Collect data from the table
+    const rows = QSA('#attendance-table tbody tr');
+    const allSessionsData = {};
+    
+    // Initialize data structure for all 6 sessions
+    for (let i = 1; i <= 6; i++) {
+      allSessionsData[i] = {
+        attendance: {},
+        participation: {}
+      };
+    }
+    
+    rows.forEach(row => {
+      const studentId = row.dataset.id;
+      const cells = QSA('td', row);
+      
+      // Get session checkboxes (S1-S6)
+      const sessionCells = cells.slice(4, 10); // Columns 5-10 (0-indexed: 4-9)
+      const sessionStatuses = sessionCells.map(cell => {
+        const checkbox = cell.querySelector('input[type="checkbox"]');
+        return checkbox ? checkbox.checked : false;
+      });
+      
+      // Get participation checkboxes (P1-P6)
+      const participationCells = cells.slice(10, 16); // Columns 11-16 (0-indexed: 10-15)
+      const participations = participationCells.map(cell => {
+        const checkbox = cell.querySelector('input[type="checkbox"]');
+        return checkbox ? checkbox.checked : false;
+      });
+      
+      // Store data for each session
+      for (let sessionNumber = 1; sessionNumber <= 6; sessionNumber++) {
+        // Convert session statuses to database format
+        // Using 'present' for checked, 'absent' for unchecked
+        allSessionsData[sessionNumber].attendance[studentId] = sessionStatuses[sessionNumber - 1] ? 'present' : 'absent';
+        
+        // Store participation data
+        // Using 'question' for checked, no entry for unchecked
+        if (participations[sessionNumber - 1]) {
+          allSessionsData[sessionNumber].participation[studentId] = ['question'];
+        } else {
+          allSessionsData[sessionNumber].participation[studentId] = [];
+        }
+      }
+    });
+    
+    // Send all data to backend at once
+    const courseId = getCourseId();
+    
+    const formData = new FormData();
+    formData.append('action', 'save_all_sessions_data');
+    formData.append('course_id', courseId);
+    formData.append('sessions_data', JSON.stringify(allSessionsData));
+    
+    const response = await fetch('../backend/api/attendance.php', {
+      method: 'POST',
+      body: formData
+    });
+    
+    // Check if response is OK
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    // Get response text first to check for any unexpected output
+    const responseText = await response.text();
+    console.log('Raw response:', responseText);
+    
+    // Try to parse JSON
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError);
+      console.error('Response text that failed to parse:', responseText);
+      throw new Error('Invalid JSON response from server. Please check server logs.');
+    }
+    
+    if (result.success) {
+      alert(`✅ Attendance and participation data saved successfully! Total records: ${result.saved_records}`);
+    } else {
+      alert('❌ Error saving data: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error saving attendance data:', error);
+    alert('❌ Error saving attendance data: ' + error.message);
+  }
+}
+

@@ -1,4 +1,4 @@
-ر<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -19,7 +19,7 @@
         <li><a href="#attendance">Attendance</a></li>
         <li><a href="#add-student">Add Student</a></li>
         <li><a href="#reports">Reports</a></li>
-        <li><a href="#logout">Logout</a></li>
+        <li><a href="../logout.php">Logout</a></li>
         <li><button id="btn-dark-mode" class="dark-mode-toggle" aria-label="Toggle dark mode" title="Toggle Dark Mode">🌙</button></li>
       </ul>
     </nav>
@@ -30,7 +30,7 @@
       <h1>📊 Algiers University Attendance System</h1>
       <p>Benyoucef Benkhedda University</p>
       <p><strong>Faculty:</strong> Science – <strong>Department:</strong> Computer Science</p>
-      <p><strong>Course:</strong> Advanced Web Programming – <strong>Level:</strong> 3rd year ISIL</p>
+      <p><strong>Course:</strong> <span id="course-name">Advanced Web Programming</span> – <strong>Level:</strong> 3rd year ISIL</p>
       <p><strong>Academic Year:</strong> 2024/2025</p>
     </section>
 
@@ -144,8 +144,8 @@
 
     <section id="logout" class="section">
       <h2>🚪 Logout</h2>
-      <p style="color: #6b7280;">You have been successfully logged out. Your session data has been preserved.</p>
-      <button class="btn" onclick="alert('Logout functionality would be implemented here')">Confirm Logout</button>
+      <p style="color: #6b7280;">To logout, please use the "Logout" link in the navigation bar above.</p>
+      <p style="color: #6b7280;">Your session data has been preserved.</p>
     </section>
   </main>
 

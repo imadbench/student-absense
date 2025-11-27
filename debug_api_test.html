@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Debug Test</title>
+</head>
+<body>
+    <h1>API Debug Test</h1>
+    
+    <button onclick="testApi()">Test API Endpoint</button>
+    
+    <div id="result"></div>
+    
+    <script>
+    async function testApi() {
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '<p>Sending request...</p>';
+        
+        try {
+            // Test data
+            const allSessionsData = {
+                "1": {
+                    "attendance": {"20250001": "present"},
+                    "participation": {"20250001": ["question"]}
+                }
+            };
+            
+            const formData = new FormData();
+            formData.append('action', 'save_all_sessions_data');
+            formData.append('course_id', '1');
+            formData.append('sessions_data', JSON.stringify(allSessionsData));
+            
+            console.log('Sending request to ../../backend/api/attendance.php');
+            console.log('Form data:', {
+                action: 'save_all_sessions_data',
+                course_id: '1',
+                sessions_data: allSessionsData
+            });
+            
+            const response = await fetch('../../backend/api/attendance.php', {
+                method: 'POST',
+                body: formData
+            });
+            
+            console.log('Response received:', response);
+            console.log('Response status:', response.status);
+            console.log('Response headers:', [...response.headers.entries()]);
+            
+            const responseText = await response.text();
+            console.log('Raw response text:', responseText);
+            
+            resultDiv.innerHTML = '<h2>Response:</h2><pre>' + responseText + '</pre>';
+            
+            try {
+                const result = JSON.parse(responseText);
+                resultDiv.innerHTML += '<h2>Parsed JSON:</h2><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (e) {
+                resultDiv.innerHTML += '<h2>JSON Parse Error:</h2><p>' + e.message + '</p>';
+                resultDiv.innerHTML += '<h2>Response Text:</h2><pre>' + responseText + '</pre>';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            resultDiv.innerHTML = '<h2>Error:</h2><p>' + error.message + '</p>';
+        }
+    }
+    </script>
+</body>
+</html>
